@@ -1,0 +1,181 @@
+repeat wait() until game:IsLoaded()
+
+local erwin = "{418c79f5-8cb7-430e-9012-2b2531554858}" --EERWIN ID HERE
+local DiscordId = "886239011608358922" --DISCORD ID [ PING WHEN FINISHED INF MODE ]
+local Webhook = "https://discord.com/api/webhooks/989449546520203295/BmND1Rp4_NzZXQaOFTDq8B0NdTalXCGMbUNoKr-X0ESYdhKbfMkpZsSfrdAgaBqcgWIx" -- WEBHOOK TO SEND NOTIF
+local wave_delete = 25 -- WAVE TO DELETE ERWIN [ if u choose wave_delete = 25 then wave_delete its gonna 26 = 100 GEMS ]
+
+
+    --DON'T EDIT THINGS UNDER!
+
+local function Skip()
+    if game:GetService("Workspace")["_wave_num"].Value < 1 then
+        game:GetService("ReplicatedStorage").endpoints.client_to_server.vote_start:InvokeServer()
+    end
+end
+
+local function Discord(Webhook,Text1,Text2,coler) ---0xdc00ff
+    local Headers = {["content-type"] = "application/json"}
+    local Info = {
+        ["content"] = "",
+        ["embeds"] = {
+            {
+                ["title"] = Text1,
+                ["color"] = tonumber(coler),
+                ["description"] = Text2,
+                ["fields"] = {}
+            },
+        }
+    }
+
+    local Info = game:GetService("HttpService"):JSONEncode(Info)
+    local HttpRequest = http_request;
+    if syn then HttpRequest = syn.request else HttpRequest = http_request end
+        HttpRequest({Url=Webhook, Body=Info, Method="POST", Headers=Headers})
+end
+
+local function EndGame(Webhook,coler)
+    local Hold = game:GetService("Players").LocalPlayer.PlayerGui.ResultsUI.Holder
+    if game:GetService("Workspace")["_DATA"].GameFinished.Value == true then
+        task.wait(3)
+        for i = 1,10 do
+        game:GetService("ReplicatedStorage").endpoints.client_to_server.save_notifications_state:InvokeServer("Items", i)
+        end
+        local Headers = {["content-type"] = "application/json"}
+        local Info = {
+            ["content"] = "<@" .. DiscordId .. ">",
+            ["embeds"] = {
+                {
+                    ["title"] = "Anime Adventures - Finished Inf Mode",
+                    ["color"] = tonumber(coler),
+                    ["description"] = "Status: " .. Hold.Title.Text .. "\nMode: " ..Hold.LevelName.Text.. "\nDifficulty: " ..Hold.Difficulty.Text.. "\n" ..Hold.Middle.WavesCompleted.Text.. "\n" ..Hold.Middle.Timer.Text.. "\nGems: " ..Hold.GoldGemXP.GemReward.Main.Amount.Text.. "\nExp: " ..Hold.GoldGemXP.XPReward.Main.Amount.Text.. "\nTotal Gems: " ..game:GetService("Players").LocalPlayer["_stats"]["gem_amount"].Value.. "\nTotal Exp: " ..game:GetService("Players").LocalPlayer["_stats"]["player_xp"].Value.. "",
+                    ["fields"] = {}
+                },
+            }
+        }
+
+        local Info = game:GetService("HttpService"):JSONEncode(Info)
+        local HttpRequest = http_request;
+        if syn then HttpRequest = syn.request else HttpRequest = http_request end
+            HttpRequest({Url=Webhook, Body=Info, Method="POST", Headers=Headers})
+        task.wait(3)
+        game:GetService("ReplicatedStorage").endpoints.client_to_server.teleport_back_to_lobby:InvokeServer()
+    end
+end
+
+
+
+local function Place(PetID,placeX,placeY,placeZ,round)
+    if game:GetService("Workspace")["_wave_num"].Value < round then
+        local args = {
+            [1] = PetID,
+            [2] = CFrame.new(placeX,placeY,placeZ) * CFrame.Angles(0, -0, -0)
+        }
+
+        game:GetService("ReplicatedStorage").endpoints.client_to_server.spawn_unit:InvokeServer(unpack(args))
+    end
+end
+
+local function StartGame()
+    game:GetService("ReplicatedStorage").endpoints.client_to_server.request_start_game:InvokeServer("_lobbytemplategreen6")
+end
+
+
+
+local function upgrade(name)
+    for i, v in next, game:GetService("Workspace")["_UNITS"]:GetChildren() do
+        if v.Name == name then
+            if v._stats.upgrade.Value < 20 then
+                game:GetService("ReplicatedStorage").endpoints.client_to_server.upgrade_unit_ingame:InvokeServer(v)
+            end
+        end
+    end
+end
+
+local function Sell(name,round)
+    if game:GetService("Workspace")["_wave_num"].Value > round then
+        for i, v in next, game:GetService("Workspace")["_UNITS"]:GetChildren() do
+            if v.Name == name then
+                game:GetService("ReplicatedStorage").endpoints.client_to_server.sell_unit_ingame:InvokeServer(v)
+            end
+        end
+    end
+end
+
+
+task.spawn(function()
+    while task.wait() and true do
+        pcall(function()
+            if game.Players.LocalPlayer.Character.Head:FindFirstChild("_overhead") then
+                workspace[game.Players.LocalPlayer.Name].Head["_overhead"]:Destroy()
+            end
+        end)
+    end
+end)
+
+
+task.spawn(function()
+  if game:GetService("Workspace")["_MAP_CONFIG"].IsLobby.Value == true then
+	repeat wait() until game:IsLoaded()
+	Discord(Webhook, "Player Status: In Lobby", "", 0x0127ff)
+    while task.wait() and true do
+        pcall(function()
+local args = {
+    [1] = "_lobbytemplategreen6"
+}
+
+game:GetService("ReplicatedStorage").endpoints.client_to_server.request_join_lobby:InvokeServer(unpack(args))
+	wait(.5)
+local args = {
+    [1] = "namek_infinite"
+}
+
+game:GetService("ReplicatedStorage").endpoints.client_to_server.request_infinite_leaderboard:InvokeServer(unpack(args))
+ wait(.5)
+local args = {
+    [1] = "_lobbytemplategreen6",
+    [2] = "namek_infinite",
+    [3] = false,
+    [4] = "Hard"
+}
+
+game:GetService("ReplicatedStorage").endpoints.client_to_server.request_lock_level:InvokeServer(unpack(args))
+
+StartGame()
+end)
+end
+end
+end)
+
+
+task.spawn(function()
+
+  if game:GetService("Workspace")["_MAP_CONFIG"].IsLobby.Value == false then
+    repeat wait() until game:IsLoaded()
+    task.wait(20)
+    game.Players.LocalPlayer.PlayerGui.MessageGui.Enabled = false
+	Discord(Webhook, "Player Status: In Inf Mode","" , 0x01ff00)
+  end
+    
+    while true do
+        task.wait()
+        Skip()
+        Place(erwin, -2933, 91, -690, 12)
+        Place(erwin, -2933, 94, -695, 14)
+        Place(erwin, -2935, 94, -701, 16)
+        upgrade("erwin")
+		Sell("erwin",wave_delete)
+		EndGame(Webhook, 0x01ff00)
+	if game:GetService("Workspace")["_DATA"].GameFinished.Value == true then
+		local CoreGui = game:GetService("StarterGui")
+
+	CoreGui:SetCore("SendNotification", {
+		Title = "Teleport Back To Lobby";
+		Text = "Is this a notification? , maybe yes lol";
+		Duration = 5;
+	})
+		task.wait(.1)
+	game:GetService("ReplicatedStorage").endpoints.client_to_server.teleport_back_to_lobby:InvokeServer()
+	end
+end
+end)
